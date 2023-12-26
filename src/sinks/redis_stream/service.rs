@@ -39,7 +39,7 @@ impl Service<RedisRequest> for RedisService {
                 }
             }*/
             // println!("{maxlen:?}, {k:?}, {v:?}");
-            let fv = [(field, kv.value)];
+            let fv = [("vector", kv.value.as_ref())];
             match self.maxlen {
                 None => {
                     if count > 1 {
@@ -50,9 +50,9 @@ impl Service<RedisRequest> for RedisService {
                 }
                 Some(value) => {
                     if count > 1 {
-                        pipe.atomic().xadd_maxlen(kv.key, *value, "*", &fv);
+                        pipe.atomic().xadd_maxlen(kv.key, value, "*", &fv);
                     } else {
-                        pipe.xadd_maxlen(kv.key, *value, "*", &fv);
+                        pipe.xadd_maxlen(kv.key, value, "*", &fv);
                     }
                 }
             }
