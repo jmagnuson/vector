@@ -77,13 +77,9 @@ pub struct RedisSinkConfig {
     #[configurable(derived)]
     pub(super) encoding: EncodingConfig,
 
-    #[configurable(derived)]
-    #[serde(default)]
-    pub(super) data_type: DataTypeConfig,
-
-    #[configurable(derived)]
-    #[serde(alias = "stream")]
-    pub(super) stream_option: Option<StreamOption>,
+    // #[configurable(derived)]
+    // #[serde(alias = "stream")]
+    // pub(super) stream_option: Option<StreamOption>,
 
     /// The URL of the Redis endpoint to connect to.
     ///
@@ -93,10 +89,14 @@ pub struct RedisSinkConfig {
     #[serde(alias = "url")]
     pub(super) endpoint: String,
 
-    /// The Redis key to publish messages to.
+    /// The Redis stream key to publish messages to.
     #[configurable(validation(length(min = 1)))]
     #[configurable(metadata(docs::examples = "syslog:{{ app }}", docs::examples = "vector"))]
     pub(super) key: Template,
+
+    /// The max length for the stream
+    #[configurable(derived)]
+    pub maxlen: Option<MaxLenOption>,
 
     #[configurable(derived)]
     #[serde(default)]

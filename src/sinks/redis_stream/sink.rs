@@ -1,12 +1,12 @@
 use std::future;
 
-use redis::{aio::ConnectionManager, RedisError};
+use redis::{aio::ConnectionManager, RedisError, streams::StreamMaxlen};
 
 use crate::sinks::{prelude::*, util::retries::RetryAction};
 use crate::sinks::redis_stream::config::{MaxLenType};
 
 use super::{
-    config::{DataTypeConfig, RedisSinkConfig, RedisTowerRequestConfigDefaults},
+    config::{RedisSinkConfig, RedisTowerRequestConfigDefaults},
     request_builder::request_builder,
     service::{RedisResponse, RedisService},
     RedisEvent,
@@ -17,26 +17,27 @@ pub(super) struct RedisSink {
     encoder: crate::codecs::Encoder<()>,
     transformer: crate::codecs::Transformer,
     conn: ConnectionManager,
-    data_type: super::DataType,
+    // data_type: super::DataType,
     key: Template,
+    maxlen: Option<StreamMaxlen>,
     batcher_settings: BatcherSettings,
 }
 
 impl RedisSink {
     pub(super) fn new(config: &RedisSinkConfig, conn: ConnectionManager) -> crate::Result<Self> {
-        let stream_option = config.stream_option.clone().unwrap();
-        let _field = stream_option.field;
-        let maxlen = stream_option.maxlen
+        // let stream_option = config.stream_option.clone().unwrap();
+        // let _field = stream_option.field;
+        let maxlen = config.maxlen
             .map(|maxlen| match maxlen.maxlen_type {
-                MaxLenType::Equals => redis::streams::StreamMaxlen::Equals(maxlen.threshold),
-                MaxLenType::Approx => redis::streams::StreamMaxlen::Approx(maxlen.threshold)
+                MaxLenType::Equals => StreamMaxlen::Equals(maxlen.threshold),
+                MaxLenType::Approx => StreamMaxlen::Approx(maxlen.threshold)
             });
-        let data_type = match config.data_type {
+        /*let data_type = match config.data_type {
             DataTypeConfig::Stream => super::DataType::Stream {
                 // field,
                 maxlen,
             },
-        };
+        };*/
         // todo!("populate fields");
 
         let batcher_settings = config.batch.validate()?.into_batcher_settings()?;
@@ -52,8 +53,9 @@ impl RedisSink {
             transformer,
             encoder,
             conn,
-            data_type,
+            // data_type,
             key,
+            maxlen,
         })
     }
 
@@ -81,7 +83,7 @@ impl RedisSink {
 
         let service = RedisService {
             conn: self.conn.clone(),
-            data_type: self.data_type,
+            maxlen: self.maxlen,
         };
 
         let service = ServiceBuilder::new()

@@ -9,7 +9,7 @@ use super::{RedisRequest, RedisSinkError};
 #[derive(Clone)]
 pub struct RedisService {
     pub(super) conn: ConnectionManager,
-    pub(super) data_type: super::DataType,
+    pub(super) maxlen: Option<redis::streams::StreamMaxlen>,
 }
 
 impl Service<RedisRequest> for RedisService {
@@ -30,14 +30,15 @@ impl Service<RedisRequest> for RedisService {
         let /*mut*/ pipe = redis::pipe();
 
         for kv in kvs.request {
-            match self.data_type {
+            let maxlen = self.maxlen;
+            let k = kv.key;
+            let v = kv.value;
+            /*match self.data_type {
                 super::DataType::Stream{ /*ref field,*/ ref maxlen} => {
-                    let k = kv.key;
-                    let v = kv.value;
-                    println!("{maxlen:?}, {k:?}, {v:?}");
                     todo!();
                 }
-            }
+            }*/
+            println!("{maxlen:?}, {k:?}, {v:?}");
         }
 
         let byte_size = kvs.metadata.events_byte_size();
