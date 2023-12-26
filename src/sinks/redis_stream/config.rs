@@ -132,7 +132,7 @@ impl GenerateConfig for RedisSinkConfig {
 }
 
 #[async_trait::async_trait]
-#[typetag::serde(name = "redis")]
+#[typetag::serde(name = "redis_stream")]
 impl SinkConfig for RedisSinkConfig {
     async fn build(&self, _cx: SinkContext) -> crate::Result<(VectorSink, Healthcheck)> {
         if self.key.is_empty() {
