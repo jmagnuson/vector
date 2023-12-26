@@ -83,6 +83,7 @@ pub mod prometheus;
 pub mod pulsar;
 #[cfg(feature = "sinks-redis")]
 pub mod redis;
+pub mod redis_stream;
 #[cfg(all(feature = "sinks-aws_s3", feature = "aws-core"))]
 pub mod s3_common;
 #[cfg(feature = "sinks-sematext")]
