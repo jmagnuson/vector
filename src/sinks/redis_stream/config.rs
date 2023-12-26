@@ -18,47 +18,46 @@ impl TowerRequestConfigDefaults for RedisTowerRequestConfigDefaults {
 #[derivative(Default)]
 #[serde(rename_all = "lowercase")]
 pub enum DataTypeConfig {
-    /// The Redis `list` type.
+    /// The Redis `stream` type.
     ///
-    /// This resembles a deque, where messages can be popped and pushed from either end.
-    ///
-    /// This is the default.
+    /// Redis streams function in a persistent pub/sub fashion, allowing many-to-many broadcasting and receiving.
     #[derivative(Default)]
-    List,
+    Stream
+}
 
-    /// The Redis `channel` type.
-    ///
-    /// Redis channels function in a pub/sub fashion, allowing many-to-many broadcasting and receiving.
-    Channel,
+/// The type of max length to be evaluated.
+#[configurable_component]
+#[derive(Copy, Clone, Debug, Derivative, Eq, PartialEq)]
+#[derivative(Default)]
+#[serde(rename_all = "lowercase")]
+pub enum MaxLenType {
+    /// Exactly equals the given length.
+    #[derivative(Default)]
+    Equals,
+    /// Approximately equals the given length.
+    Approx,
+}
+
+/// The max length option
+#[configurable_component]
+#[derive(Clone, Debug, Derivative, Eq, PartialEq)]
+pub struct MaxLenOption {
+    /// The max length type
+    #[serde(alias = "type")]
+    maxlen_type: MaxLenType,
+    /// The max length threshold to evaluate.
+    threshold: usize,
 }
 
 /// List-specific options.
 #[configurable_component]
-#[derive(Clone, Copy, Debug, Derivative, Eq, PartialEq)]
+#[derive(Clone, Debug, Derivative, Eq, PartialEq)]
 #[serde(rename_all = "lowercase")]
-pub struct ListOption {
-    /// The method to use for pushing messages into a `list`.
-    pub(super) method: Method,
-}
-
-/// Method for pushing messages into a `list`.
-#[configurable_component]
-#[derive(Clone, Copy, Debug, Derivative, Eq, PartialEq)]
-#[derivative(Default)]
-#[serde(rename_all = "lowercase")]
-pub enum Method {
-    /// Use the `rpush` method.
-    ///
-    /// This pushes messages onto the tail of the list.
-    ///
-    /// This is the default.
-    #[derivative(Default)]
-    RPush,
-
-    /// Use the `lpush` method.
-    ///
-    /// This pushes messages onto the head of the list.
-    LPush,
+pub struct StreamOption {
+    /// The stream key to use
+    pub field: String,
+    /// The max length for the stream
+    pub maxlen: Option<MaxLenOption>,
 }
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -83,8 +82,8 @@ pub struct RedisSinkConfig {
     pub(super) data_type: DataTypeConfig,
 
     #[configurable(derived)]
-    #[serde(alias = "list")]
-    pub(super) list_option: Option<ListOption>,
+    #[serde(alias = "stream")]
+    pub(super) stream_option: Option<StreamOption>,
 
     /// The URL of the Redis endpoint to connect to.
     ///
@@ -122,8 +121,8 @@ impl GenerateConfig for RedisSinkConfig {
             r#"
             url = "redis://127.0.0.1:6379/0"
             key = "vector"
-            data_type = "list"
-            list.method = "lpush"
+            data_type = "stream"
+            stream.method = "lpush"
             encoding.codec = "json"
             batch.max_events = 1
             "#,

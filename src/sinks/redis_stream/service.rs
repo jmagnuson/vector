@@ -4,7 +4,7 @@ use redis::aio::ConnectionManager;
 
 use crate::sinks::prelude::*;
 
-use super::{config::Method, RedisRequest, RedisSinkError};
+use super::{RedisRequest, RedisSinkError};
 
 #[derive(Clone)]
 pub struct RedisService {
@@ -31,28 +31,8 @@ impl Service<RedisRequest> for RedisService {
 
         for kv in kvs.request {
             match self.data_type {
-                super::DataType::List(method) => match method {
-                    Method::LPush => {
-                        if count > 1 {
-                            pipe.atomic().lpush(kv.key, kv.value.as_ref());
-                        } else {
-                            pipe.lpush(kv.key, kv.value.as_ref());
-                        }
-                    }
-                    Method::RPush => {
-                        if count > 1 {
-                            pipe.atomic().rpush(kv.key, kv.value.as_ref());
-                        } else {
-                            pipe.rpush(kv.key, kv.value.as_ref());
-                        }
-                    }
-                },
-                super::DataType::Channel => {
-                    if count > 1 {
-                        pipe.atomic().publish(kv.key, kv.value.as_ref());
-                    } else {
-                        pipe.publish(kv.key, kv.value.as_ref());
-                    }
+                super::DataType::Stream{ ref field, ref maxlen } => {
+                    todo!();
                 }
             }
         }

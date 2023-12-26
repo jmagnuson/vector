@@ -14,12 +14,11 @@ mod tests;
 mod integration_tests;
 
 use bytes::Bytes;
-use redis::RedisError;
+use redis::{/*aio::ConnectionManager,*/ streams::StreamMaxlen, RedisError, /*RedisResult*/};
+use serde::{Deserialize, Serialize};
 use snafu::Snafu;
 
 use crate::sinks::prelude::*;
-
-use self::config::Method;
 
 use super::util::EncodedLength;
 
@@ -33,19 +32,36 @@ pub(super) enum RedisSinkError {
     SendError { source: RedisError },
 }
 
-#[derive(Clone, Copy, Debug, Derivative)]
+#[derive(Copy, Clone, Debug, Derivative, Deserialize, Serialize, Eq, PartialEq)]
+#[derivative(Default)]
+#[serde(rename_all = "lowercase")]
+pub enum MaxLenType {
+    #[derivative(Default)]
+    Equals,
+    Approx,
+}
+
+#[derive(Clone, Debug, Derivative, Deserialize, Serialize, Eq, PartialEq)]
+pub struct MaxLenOption {
+    #[serde(alias = "type")]
+    maxlen_type: MaxLenType,
+    threshold: usize,
+}
+
+#[derive(Clone, Debug, Derivative, Deserialize, Serialize, Eq, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub struct StreamOption {
+    field: String,
+    maxlen: Option<MaxLenOption>,
+}
+
+#[derive(Clone, Debug, Derivative)]
 #[derivative(Default)]
 pub enum DataType {
-    /// The Redis `list` type.
-    ///
-    /// This resembles a deque, where messages can be popped and pushed from either end.
-    #[derivative(Default)]
-    List(Method),
-
-    /// The Redis `channel` type.
-    ///
-    /// Redis channels function in a pub/sub fashion, allowing many-to-many broadcasting and receiving.
-    Channel,
+    Stream {
+        field: String,
+        maxlen: Option<StreamMaxlen>,
+    },
 }
 
 /// Wrapper for an `Event` that also stored the rendered key.

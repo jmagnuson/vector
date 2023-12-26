@@ -23,11 +23,17 @@ pub(super) struct RedisSink {
 
 impl RedisSink {
     pub(super) fn new(config: &RedisSinkConfig, conn: ConnectionManager) -> crate::Result<Self> {
-        let method = config.list_option.map(|option| option.method);
+        let stream_option = config.stream_option.unwrap();
+        let field = stream_option.field;
+        let maxlen = stream_option.maxlen
+            .map(redis::streams::StreamMaxlen::Equals);
         let data_type = match config.data_type {
-            DataTypeConfig::Channel => super::DataType::Channel,
-            DataTypeConfig::List => super::DataType::List(method.unwrap_or_default()),
+            DataTypeConfig::Stream => super::DataType::Stream {
+                field,
+                maxlen,
+            },
         };
+        // todo!("populate fields");
 
         let batcher_settings = config.batch.validate()?.into_batcher_settings()?;
         let transformer = config.encoding.transformer();
