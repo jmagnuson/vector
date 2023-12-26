@@ -70,7 +70,7 @@ impl SinkBatchSettings for RedisDefaultBatchSettings {
 }
 
 /// Configuration for the `redis` sink.
-#[configurable_component(sink("redis", "Publish observability data to Redis."))]
+#[configurable_component(sink("redis_stream", "Publish observability data to Redis."))]
 #[derive(Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct RedisSinkConfig {
