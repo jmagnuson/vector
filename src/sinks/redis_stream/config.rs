@@ -40,13 +40,13 @@ pub enum MaxLenType {
 
 /// The max length option
 #[configurable_component]
-#[derive(Clone, Debug, Derivative, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Derivative, Eq, PartialEq)]
 pub struct MaxLenOption {
     /// The max length type
     #[serde(alias = "type")]
-    maxlen_type: MaxLenType,
+    pub maxlen_type: MaxLenType,
     /// The max length threshold to evaluate.
-    threshold: usize,
+    pub threshold: usize,
 }
 
 /// List-specific options.

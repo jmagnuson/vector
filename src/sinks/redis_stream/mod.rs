@@ -55,11 +55,12 @@ pub struct StreamOption {
     maxlen: Option<MaxLenOption>,
 }
 
-#[derive(Clone, Debug, Derivative)]
+#[derive(Clone, Copy, Debug, Derivative)]
 #[derivative(Default)]
 pub enum DataType {
+    #[derivative(Default)]
     Stream {
-        field: String,
+        // field: Template,
         maxlen: Option<StreamMaxlen>,
     },
 }

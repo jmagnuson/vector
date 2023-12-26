@@ -3,6 +3,7 @@ use std::future;
 use redis::{aio::ConnectionManager, RedisError};
 
 use crate::sinks::{prelude::*, util::retries::RetryAction};
+use crate::sinks::redis_stream::config::{MaxLenType};
 
 use super::{
     config::{DataTypeConfig, RedisSinkConfig, RedisTowerRequestConfigDefaults},
@@ -23,13 +24,16 @@ pub(super) struct RedisSink {
 
 impl RedisSink {
     pub(super) fn new(config: &RedisSinkConfig, conn: ConnectionManager) -> crate::Result<Self> {
-        let stream_option = config.stream_option.unwrap();
-        let field = stream_option.field;
+        let stream_option = config.stream_option.clone().unwrap();
+        let _field = stream_option.field;
         let maxlen = stream_option.maxlen
-            .map(redis::streams::StreamMaxlen::Equals);
+            .map(|maxlen| match maxlen.maxlen_type {
+                MaxLenType::Equals => redis::streams::StreamMaxlen::Equals(maxlen.threshold),
+                MaxLenType::Approx => redis::streams::StreamMaxlen::Approx(maxlen.threshold)
+            });
         let data_type = match config.data_type {
             DataTypeConfig::Stream => super::DataType::Stream {
-                field,
+                // field,
                 maxlen,
             },
         };

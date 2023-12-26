@@ -24,14 +24,17 @@ impl Service<RedisRequest> for RedisService {
 
     // Emission of internal events for errors and dropped events is handled upstream by the caller.
     fn call(&mut self, kvs: RedisRequest) -> Self::Future {
-        let count = kvs.request.len();
+        let _count = kvs.request.len();
 
         let mut conn = self.conn.clone();
-        let mut pipe = redis::pipe();
+        let /*mut*/ pipe = redis::pipe();
 
         for kv in kvs.request {
             match self.data_type {
-                super::DataType::Stream{ ref field, ref maxlen } => {
+                super::DataType::Stream{ /*ref field,*/ ref maxlen} => {
+                    let k = kv.key;
+                    let v = kv.value;
+                    println!("{maxlen:?}, {k:?}, {v:?}");
                     todo!();
                 }
             }
