@@ -41,11 +41,22 @@ impl Service<RedisRequest> for RedisService {
             }*/
             // println!("{maxlen:?}, {k:?}, {v:?}");
             // let fv = [("vector", kv.value.as_ref())];
-            let valmap: HashMap<String, Value> = match serde_json::from_slice(kv.value.as_ref()) {
+            let valmap: HashMap<String, serde_json::Value> = match serde_json::from_slice(kv.value.as_ref()) {
                 Ok(valmap) => valmap,
                 Err(source) => return Box::pin(async move { Err(RedisSinkError::Serde { source }) })
             };
-            let fv: Vec<(String, String)> = valmap.into_iter().map(|(k,v)| (k, v.to_string())).collect();
+            let fv: Vec<(String, String)> = valmap.into_iter().map(|(k,v)| {
+                // let v_str = v.to_string();
+                let val = match v {
+                    serde_json::Value::String(s) => s,
+                    _ => v.to_string(),
+                };
+                /*let val = match serde_json::from_value(v.clone()) {
+                    Err(e) => v.to_string(),
+                    Ok(val) => val,
+                };*/
+                (k, val)
+            }).collect();
             match self.maxlen {
                 None => {
                     if count > 1 {
