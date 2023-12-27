@@ -30,6 +30,8 @@ pub(super) enum RedisSinkError {
     KeyTemplate { source: TemplateParseError },
     #[snafu(display("Error sending query: {}", source))]
     SendError { source: RedisError },
+    #[snafu(display("Error serializing query: {}", source))]
+    Serde { source: serde_json::Error },
 }
 
 #[derive(Copy, Clone, Debug, Derivative, Deserialize, Serialize, Eq, PartialEq)]

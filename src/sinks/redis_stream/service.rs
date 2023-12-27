@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::task::{Context, Poll};
 
 use redis::aio::ConnectionManager;
@@ -39,7 +40,12 @@ impl Service<RedisRequest> for RedisService {
                 }
             }*/
             // println!("{maxlen:?}, {k:?}, {v:?}");
-            let fv = [("vector", kv.value.as_ref())];
+            // let fv = [("vector", kv.value.as_ref())];
+            let valmap: HashMap<String, String> = match serde_json::from_slice(kv.value.as_ref()) {
+                Ok(valmap) => valmap,
+                Err(source) => return Box::pin(async move { Err(RedisSinkError::Serde { source }) })
+            };
+            let fv: Vec<(String, String)> = valmap.into_iter().collect();
             match self.maxlen {
                 None => {
                     if count > 1 {
