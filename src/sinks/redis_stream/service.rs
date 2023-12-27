@@ -74,14 +74,14 @@ impl Service<RedisRequest> for RedisService {
 }
 
 pub struct RedisResponse {
-    pub event_status: Vec<bool>,
+    pub event_status: Vec<String>,
     pub events_byte_size: GroupedCountByteSize,
     pub byte_size: usize,
 }
 
 impl RedisResponse {
     pub(super) fn is_successful(&self) -> bool {
-        self.event_status.iter().all(|x| *x)
+        self.event_status.iter().all(|x| !x.is_empty())
     }
 }
 
